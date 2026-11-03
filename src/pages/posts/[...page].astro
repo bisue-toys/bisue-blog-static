@@ -1,0 +1,71 @@
+---
+import type { GetStaticPaths, Page } from 'astro';
+import Pagination from '@/components/common/Pagination.astro';
+import PostCard from '@/components/post/PostCard.astro';
+import { siteConfig } from '@/config/site';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getAllPosts, type ProcessedPost } from '@/lib/posts';
+
+export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
+  const allPosts = await getAllPosts();
+  return paginate(allPosts, {
+    pageSize: siteConfig.postsPerPage,
+  });
+};
+
+interface Props {
+  page: Page<ProcessedPost>;
+}
+
+const { page } = Astro.props;
+---
+
+<BaseLayout
+  title="전체 게시글 목록"
+  description={`${siteConfig.title}에 등록된 모든 카테고리의 최신 게시글 목록입니다.`}
+>
+  <section class="py-10 sm:py-12 border-b border-zinc-200">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-2 mb-2">
+          <span class="px-2.5 py-0.5 rounded-md bg-zinc-900 text-white text-xs font-bold uppercase">
+            Archive
+          </span>
+        </div>
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-zinc-900 tracking-tight">
+          전체 게시글
+        </h1>
+        <p class="mt-2 text-sm sm:text-base text-zinc-600 max-w-2xl">
+          모든 카테고리의 아티클을 최신 작성일 순으로 모아 볼 수 있습니다.
+        </p>
+      </div>
+
+      <div class="text-sm font-semibold text-zinc-500 shrink-0">
+        총 <span class="text-blue-600 font-bold">{page.total}</span>개의 게시글
+        {
+          page.lastPage > 1 && (
+            <span class="text-zinc-400 ml-1">
+              ({page.currentPage} / {page.lastPage} 페이지)
+            </span>
+          )
+        }
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="전체 게시글 목록" class="py-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-7">
+      {
+        page.data.map((post, idx) => (
+          <PostCard post={post} eagerLoad={idx < 3} />
+        ))
+      }
+    </div>
+
+    <Pagination
+      currentPage={page.currentPage}
+      totalPages={page.lastPage}
+      baseUrl="/posts"
+    />
+  </section>
+</BaseLayout>

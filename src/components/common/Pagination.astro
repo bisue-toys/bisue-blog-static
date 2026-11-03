@@ -1,0 +1,87 @@
+---
+import { withBase } from '@/lib/url';
+
+interface Props {
+  currentPage: number;
+  totalPages: number;
+  /** 기본 경로 (예: "/posts" 또는 "/category/tech") */
+  baseUrl: string;
+}
+
+const { currentPage, totalPages, baseUrl } = Astro.props;
+
+function getPageUrl(page: number): string {
+  const cleanBase = baseUrl.replace(/\/$/, '');
+  if (page <= 1) {
+    return withBase(`${cleanBase}/`);
+  }
+  return withBase(`${cleanBase}/${page}/`);
+}
+
+const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+---
+
+{
+  totalPages > 1 && (
+    <nav
+      aria-label="페이지 번호 이동"
+      class="mt-12 flex items-center justify-center gap-1.5 select-none"
+    >
+      {currentPage > 1 ? (
+        <a
+          href={getPageUrl(currentPage - 1)}
+          class="inline-flex items-center gap-1 px-3.5 py-2 rounded-lg border border-zinc-200 bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 transition-colors"
+        >
+          <span aria-hidden="true">←</span>
+          <span>이전</span>
+        </a>
+      ) : (
+        <span
+          aria-disabled="true"
+          class="inline-flex items-center gap-1 px-3.5 py-2 rounded-lg border border-zinc-100 bg-zinc-50 text-sm font-medium text-zinc-300 cursor-not-allowed"
+        >
+          <span aria-hidden="true">←</span>
+          <span>이전</span>
+        </span>
+      )}
+
+      <div class="flex items-center gap-1 mx-1">
+        {pages.map((page) => {
+          const isCurrent = page === currentPage;
+          return (
+            <a
+              href={getPageUrl(page)}
+              aria-current={isCurrent ? 'page' : undefined}
+              class:list={[
+                'inline-flex items-center justify-center w-9 h-9 rounded-lg text-sm font-semibold transition-colors',
+                isCurrent
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300',
+              ]}
+            >
+              {page}
+            </a>
+          );
+        })}
+      </div>
+
+      {currentPage < totalPages ? (
+        <a
+          href={getPageUrl(currentPage + 1)}
+          class="inline-flex items-center gap-1 px-3.5 py-2 rounded-lg border border-zinc-200 bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 transition-colors"
+        >
+          <span>다음</span>
+          <span aria-hidden="true">→</span>
+        </a>
+      ) : (
+        <span
+          aria-disabled="true"
+          class="inline-flex items-center gap-1 px-3.5 py-2 rounded-lg border border-zinc-100 bg-zinc-50 text-sm font-medium text-zinc-300 cursor-not-allowed"
+        >
+          <span>다음</span>
+          <span aria-hidden="true">→</span>
+        </span>
+      )}
+    </nav>
+  )
+}

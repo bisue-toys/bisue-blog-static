@@ -1,0 +1,146 @@
+---
+import { withBase } from '@/lib/url';
+
+const pagefindBundlePath = withBase('/pagefind/');
+---
+
+<dialog
+  id="search-modal"
+  aria-labelledby="search-modal-title"
+  {...({ closedby: 'any' } as any)}
+  class="w-full max-w-2xl rounded-2xl bg-white p-0 shadow-2xl border border-zinc-200 text-zinc-900 mt-12 sm:mt-20 mx-auto"
+>
+  <div class="p-5 sm:p-6">
+    <div class="flex items-center justify-between pb-4 border-b border-zinc-200">
+      <h2 id="search-modal-title" class="text-base font-bold text-zinc-900 flex items-center gap-2">
+        <svg
+          class="w-4 h-4 text-blue-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        <span>게시글 키워드 검색</span>
+      </h2>
+      <form method="dialog">
+        <button
+          type="submit"
+          aria-label="검색창 닫기"
+          class="text-xs font-medium text-zinc-500 hover:text-zinc-900 px-2 py-1 rounded-md border border-zinc-200 bg-zinc-50 transition-colors"
+        >
+          ESC 닫기
+        </button>
+      </form>
+    </div>
+
+    <search class="mt-4">
+      <div
+        id="pagefind-search-container"
+        data-bundle-path={pagefindBundlePath}
+        class="min-h-[140px] max-h-[65vh] overflow-y-auto"
+      >
+        <p id="pagefind-loading-msg" class="text-sm text-zinc-500 py-8 text-center">
+          검색 엔진을 불러오는 중입니다...
+        </p>
+      </div>
+    </search>
+  </div>
+</dialog>
+
+<script is:inline>
+  (() => {
+    const openBtn = document.getElementById('open-search-btn');
+    const searchDialog = document.getElementById('search-modal');
+    const container = document.getElementById('pagefind-search-container');
+    let pagefindInitialized = false;
+
+    async function initPagefind() {
+      if (pagefindInitialized || !container) return;
+      pagefindInitialized = true;
+
+      const bundlePath = container.getAttribute('data-bundle-path') || '/pagefind/';
+
+      // Load Pagefind UI CSS dynamically
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = `${bundlePath}pagefind-ui.css`;
+      document.head.appendChild(link);
+
+      try {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = `${bundlePath}pagefind-ui.js`;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+
+        const loadingMsg = document.getElementById('pagefind-loading-msg');
+        if (loadingMsg) loadingMsg.remove();
+
+        if (window.PagefindUI) {
+          new window.PagefindUI({
+            element: '#pagefind-search-container',
+            bundlePath,
+            showSubResults: true,
+            showImages: false,
+            translations: {
+              placeholder: '제목 또는 본문 키워드를 입력하세요...',
+              zero_results: "'[SEARCH_TERM]'에 대한 검색 결과가 없습니다.",
+              many_results: "'[SEARCH_TERM]' 관련 게시글 [COUNT]건",
+              one_result: "'[SEARCH_TERM]' 관련 게시글 1건",
+              clear_search: '지우기',
+            },
+          });
+        }
+      } catch {
+        container.innerHTML =
+          '<div class="py-8 px-4 text-center text-sm text-zinc-500 bg-zinc-50 rounded-xl border border-zinc-200">' +
+          '<p class="font-semibold text-zinc-700 mb-1">정적 검색 인덱스가 아직 생성되지 않았습니다.</p>' +
+          '<p class="text-xs text-zinc-500"><code>npm run build</code>를 실행하면 Pagefind 검색 인덱스가 생성되어 즉시 검색이 활성화됩니다.</p>' +
+          '</div>';
+      }
+    }
+
+    function openSearchModal() {
+      if (!searchDialog) return;
+      searchDialog.showModal();
+      initPagefind().then(() => {
+        const input = searchDialog.querySelector('input');
+        if (input) input.focus();
+      });
+    }
+
+    if (openBtn) {
+      openBtn.addEventListener('click', openSearchModal);
+    }
+
+    window.addEventListener('keydown', (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        openSearchModal();
+      }
+    });
+
+    // Fallback for browsers without native closedby="any" support
+    if (searchDialog && !('closedBy' in HTMLDialogElement.prototype)) {
+      searchDialog.addEventListener('click', (event) => {
+        if (event.target !== searchDialog) return;
+        const rect = searchDialog.getBoundingClientRect();
+        const isDialogContent =
+          rect.top <= event.clientY &&
+          event.clientY <= rect.top + rect.height &&
+          rect.left <= event.clientX &&
+          event.clientX <= rect.left + rect.width;
+        if (isDialogContent) return;
+        searchDialog.close();
+      });
+    }
+  })();
+</script>

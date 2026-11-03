@@ -1,0 +1,99 @@
+---
+import CategorySection from '@/components/post/CategorySection.astro';
+import { siteConfig } from '@/config/site';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getAllPosts, getCategoriesWithCount, getPostsByCategory } from '@/lib/posts';
+import { withBase } from '@/lib/url';
+
+const categories = await getCategoriesWithCount();
+const allPosts = await getAllPosts();
+
+const categorySections = await Promise.all(
+  categories.map(async (category) => {
+    const posts = await getPostsByCategory(category.slug);
+    return {
+      category,
+      posts: posts.slice(0, siteConfig.homePostsPerCategory),
+    };
+  })
+);
+---
+
+<BaseLayout>
+  <!-- 웹진 매거진 타이틀 배너 -->
+  <section class="py-10 sm:py-14">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div>
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/70 text-blue-700 text-xs font-bold tracking-wide uppercase mb-4"
+        >
+          <span>Digital Editorial Webzine</span>
+          <span aria-hidden="true">·</span>
+          <span>총 {allPosts.length}편의 아티클</span>
+        </div>
+        <h1
+          class="text-3xl sm:text-5xl font-extrabold text-zinc-900 tracking-tight leading-[1.15]"
+        >
+          {siteConfig.title}
+        </h1>
+        <p class="mt-3 text-base sm:text-lg text-zinc-600 max-w-2xl leading-relaxed">
+          {siteConfig.subtitle}
+        </p>
+      </div>
+
+      <!-- 카테고리 퀵 필터 태그 바 -->
+      {
+        categories.length > 0 && (
+          <div class="flex flex-wrap items-center gap-2">
+            {categories.map((cat) => (
+              <a
+                href={cat.url}
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 bg-white hover:border-blue-500 hover:text-blue-600 text-xs sm:text-sm font-semibold text-zinc-700 shadow-sm transition-all"
+              >
+                <span>{cat.label}</span>
+                <span class="text-xs text-zinc-400 font-medium">{cat.count}</span>
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <!-- 카테고리별 최신 글 3개 큐레이션 섹션 목록 -->
+  {
+    categorySections.length > 0 ? (
+      <div class="space-y-4">
+        {categorySections.map(({ category, posts }, index) => (
+          <CategorySection
+            category={category}
+            posts={posts}
+            isFirstSection={index === 0}
+          />
+        ))}
+      </div>
+    ) : (
+      <div class="py-20 text-center bg-white rounded-2xl border border-zinc-200 my-8">
+        <p class="text-lg font-bold text-zinc-800">아직 등록된 게시글이 없습니다.</p>
+        <p class="mt-2 text-sm text-zinc-500">
+          <code>src/content/posts/&lt;카테고리&gt;/&lt;파일명&gt;.md</code> 경로에 마크다운 파일을 추가해 보세요.
+        </p>
+      </div>
+    )
+  }
+
+  <!-- 하단 전체 게시글 아카이브 바로가기 배너 -->
+  {
+    allPosts.length > 0 && (
+      <div class="mt-12 pt-8 border-t border-zinc-200 flex justify-center">
+        <a
+          href={withBase('/posts/')}
+          class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-zinc-900 hover:bg-blue-600 text-white text-sm font-bold shadow-sm transition-colors"
+        >
+          <span>전체 게시글 아카이브 보기 ({allPosts.length})</span>
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    )
+  }
+</BaseLayout>

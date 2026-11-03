@@ -1,0 +1,87 @@
+---
+import { Image } from 'astro:assets';
+import type { ProcessedPost } from '@/lib/posts';
+
+interface Props {
+  post: ProcessedPost;
+  eagerLoad?: boolean;
+}
+
+const { post, eagerLoad = false } = Astro.props;
+---
+
+<article
+  class="group flex flex-col bg-white rounded-2xl border border-zinc-200/90 hover:border-zinc-400 shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-md transition-all duration-200 overflow-hidden"
+>
+  <!-- 대표 썸네일 영역 (16:9 고정 비율) -->
+  <a
+    href={post.url}
+    aria-label={`${post.title} 게시글 읽기`}
+    class="relative block aspect-video w-full overflow-hidden bg-zinc-100 border-b border-zinc-100"
+  >
+    {
+      post.thumbnail.type === 'astro-asset' && post.thumbnail.asset ? (
+        <Image
+          src={post.thumbnail.asset}
+          alt={post.thumbnail.alt}
+          width={800}
+          height={450}
+          loading={eagerLoad ? 'eager' : 'lazy'}
+          fetchpriority={eagerLoad ? 'high' : undefined}
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        />
+      ) : (
+        <img
+          src={post.thumbnail.src}
+          alt={post.thumbnail.alt}
+          width="800"
+          height="450"
+          loading={eagerLoad ? undefined : 'lazy'}
+          fetchpriority={eagerLoad ? 'high' : undefined}
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        />
+      )
+    }
+  </a>
+
+  <!-- 카드 본문 영역 -->
+  <div class="flex flex-col flex-1 p-5 sm:p-6">
+    <!-- 카테고리 배지 & 작성일 메타 라인 -->
+    <div class="flex items-center justify-between gap-2 text-xs mb-3">
+      <a
+        href={post.categoryUrl}
+        class="inline-flex items-center px-2.5 py-0.5 rounded-md font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+      >
+        {post.categoryLabel}
+      </a>
+      <time datetime={post.pubDate.toISOString()} class="text-zinc-400 font-medium">
+        {post.formattedDate}
+      </time>
+    </div>
+
+    <!-- 게시글 제목 -->
+    <h3
+      class="text-lg sm:text-[1.15rem] font-bold text-zinc-900 group-hover:text-blue-600 transition-colors leading-snug line-clamp-2 mb-2.5"
+    >
+      <a href={post.url} class="focus:outline-none">
+        {post.title}
+      </a>
+    </h3>
+
+    <!-- 본문 텍스트 일부 미리보기 (최대 120자 추출본) -->
+    <p class="text-sm text-zinc-600 leading-relaxed line-clamp-3 flex-1">
+      {post.excerpt}
+    </p>
+
+    <!-- 하단 아티클 이동 링크 -->
+    <div class="mt-4 pt-3.5 border-t border-zinc-100 flex items-center justify-between">
+      <a
+        href={post.url}
+        class="inline-flex items-center gap-1 text-xs font-semibold text-zinc-700 group-hover:text-blue-600 transition-colors"
+      >
+        <span>아티클 읽기</span>
+        <span aria-hidden="true" class="group-hover:translate-x-0.5 transition-transform">→</span>
+      </a>
+    </div>
+  </div>
+</article>

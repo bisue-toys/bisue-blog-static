@@ -1,0 +1,24 @@
+---
+// 상세 화면 본문에 <pre class="mermaid"> 요소가 존재할 때만 공식 mermaid 라이브러리를 동적 로드하여 SVG로 렌더링
+---
+
+<script>
+  async function renderMermaidDiagrams() {
+    const mermaidBlocks = document.querySelectorAll<HTMLElement>('pre.mermaid');
+    if (mermaidBlocks.length === 0) return;
+
+    const { default: mermaid } = await import('mermaid');
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      fontFamily: 'Pretendard Variable, Pretendard, sans-serif',
+    });
+
+    await mermaid.run({
+      nodes: mermaidBlocks,
+    });
+  }
+
+  renderMermaidDiagrams();
+</script>

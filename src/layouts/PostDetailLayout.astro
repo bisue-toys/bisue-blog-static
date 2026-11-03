@@ -1,0 +1,121 @@
+---
+import { Image } from 'astro:assets';
+import type { MarkdownHeading } from 'astro';
+import MermaidInit from '@/components/post/MermaidInit.astro';
+import PostNavigation from '@/components/post/PostNavigation.astro';
+import TableOfContents from '@/components/post/TableOfContents.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { formatDate, type ProcessedPost } from '@/lib/posts';
+
+interface Props {
+  post: ProcessedPost;
+  headings: MarkdownHeading[];
+  prevPost: ProcessedPost | null;
+  nextPost: ProcessedPost | null;
+}
+
+const { post, headings, prevPost, nextPost } = Astro.props;
+const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const hasToc = tocHeadings.length > 0;
+---
+
+<BaseLayout
+  title={post.title}
+  description={post.excerpt}
+  activeCategory={post.categorySlug}
+  ogImage={post.thumbnail.src}
+>
+  <div class="py-10 sm:py-14">
+    <!-- 게시글 상단 헤더 영역 (카테고리 배지, 작성일, 제목) -->
+    <header class="max-w-4xl mx-auto pb-8 sm:pb-10 border-b border-zinc-200">
+      <div class="flex flex-wrap items-center gap-3 text-sm mb-4">
+        <a
+          href={post.categoryUrl}
+          class="inline-flex items-center px-3 py-1 rounded-lg font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors text-xs tracking-wide"
+          data-pagefind-filter="category"
+        >
+          {post.categoryLabel}
+        </a>
+        <span class="text-zinc-300" aria-hidden="true">·</span>
+        <time datetime={post.pubDate.toISOString()} class="text-zinc-500 font-medium">
+          {post.formattedDate}
+        </time>
+        {
+          post.updatedDate && (
+            <span class="text-xs text-zinc-400">
+              (수정: {formatDate(post.updatedDate)})
+            </span>
+          )
+        }
+      </div>
+
+      <h1
+        class="text-2xl sm:text-4xl lg:text-[2.5rem] font-extrabold text-zinc-900 tracking-tight leading-[1.28]"
+        data-pagefind-meta="title"
+      >
+        {post.title}
+      </h1>
+
+      <!-- Frontmatter에 명시적으로 지정한 대표 썸네일이 있는 경우 헤더 하단 커버로 노출 -->
+      {
+        !post.thumbnail.isFallback && post.entry.data.thumbnail && (
+          <div class="mt-8 overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100 aspect-video shadow-sm">
+            {post.thumbnail.type === 'astro-asset' && post.thumbnail.asset ? (
+              <Image
+                src={post.thumbnail.asset}
+                alt={post.thumbnail.alt}
+                width={1200}
+                height={675}
+                fetchpriority="high"
+                class="w-full h-full object-cover"
+              />
+            ) : (
+              <img
+                src={post.thumbnail.src}
+                alt={post.thumbnail.alt}
+                width="1200"
+                height="675"
+                fetchpriority="high"
+                class="w-full h-full object-cover"
+              />
+            )}
+          </div>
+        )
+      }
+    </header>
+
+    <!-- 게시글 본문 + 우측 Sticky 목차 2단 레이아웃 -->
+    <div
+      class:list={[
+        'mt-10 mx-auto',
+        hasToc ? 'max-w-6xl xl:flex xl:items-start xl:gap-10' : 'max-w-4xl',
+      ]}
+    >
+      <div class="flex-1 min-w-0">
+        <!-- 모바일/태블릿에서는 본문 상단에 접이식 목차가 렌더링되고, xl 이상에서는 우측 aside로 동작 -->
+        <TableOfContents headings={headings} variant="mobile" />
+
+        <article
+          data-pagefind-body
+          class="bg-white rounded-2xl border border-zinc-200/90 p-6 sm:p-10 lg:p-12 shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
+        >
+          <div class="webzine-prose">
+            <slot />
+          </div>
+        </article>
+
+        <!-- 같은 카테고리 내 이전 글 / 다음 글 이동 네비게이션 -->
+        <PostNavigation
+          prevPost={prevPost}
+          nextPost={nextPost}
+          categoryLabel={post.categoryLabel}
+          categoryUrl={post.categoryUrl}
+        />
+      </div>
+
+      {hasToc && <TableOfContents headings={headings} variant="desktop" />}
+    </div>
+  </div>
+
+  <MermaidInit />
+</BaseLayout>

@@ -1,0 +1,267 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-page: #fafafa;
+    --bg-surface: #ffffff;
+    --bg-muted: #f4f4f5;
+    --text-primary: #18181b;
+    --text-secondary: #52525b;
+    --text-muted: #a1a1aa;
+    --accent-primary: #2563eb;
+    --border-default: #e4e4e7;
+  }
+
+  html {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family:
+      'Pretendard Variable',
+      Pretendard,
+      -apple-system,
+      BlinkMacSystemFont,
+      system-ui,
+      sans-serif;
+    scroll-behavior: smooth;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-page);
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    text-wrap: balance;
+  }
+
+  p,
+  blockquote,
+  li {
+    text-wrap: pretty;
+  }
+
+  pre,
+  code {
+    word-break: normal;
+  }
+}
+
+/* Native Modal Dialog Scroll Containment & Backdrop (Modern Web Guidance) */
+dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background-color: rgba(24, 24, 27, 0.45);
+  backdrop-filter: blur(3px);
+}
+
+/* Hide scrollbars on horizontal category nav while maintaining scrollability */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Webzine Prose & Extended Markdown Styling */
+.webzine-prose {
+  @apply prose prose-zinc max-w-none;
+  font-size: 1.04rem;
+  line-height: 1.85;
+  letter-spacing: -0.005em;
+}
+
+.webzine-prose :where(h1, h2, h3, h4, h5, h6) {
+  @apply font-bold tracking-tight text-zinc-900 scroll-mt-24;
+}
+
+.webzine-prose :where(h2) {
+  @apply text-2xl sm:text-[1.65rem] mt-12 mb-5 pb-3 border-b border-zinc-200;
+}
+
+.webzine-prose :where(h3) {
+  @apply text-xl sm:text-[1.3rem] mt-9 mb-4;
+}
+
+.webzine-prose :where(p) {
+  @apply my-5 text-zinc-800 leading-[1.85];
+}
+
+.webzine-prose :where(a):not(.no-prose-link) {
+  @apply text-blue-600 font-medium underline decoration-blue-300 underline-offset-4 transition-colors hover:text-blue-700 hover:decoration-blue-600;
+}
+
+.webzine-prose :where(code):not(:where(pre *)) {
+  @apply font-mono text-[0.875em] bg-zinc-100 text-zinc-800 px-1.5 py-0.5 rounded-md border border-zinc-200/80 font-medium;
+}
+
+.webzine-prose :where(code):not(:where(pre *))::before,
+.webzine-prose :where(code):not(:where(pre *))::after {
+  content: none !important;
+}
+
+.webzine-prose :where(blockquote) {
+  @apply border-l-4 border-zinc-900 bg-zinc-100/80 py-3 px-5 rounded-r-xl not-italic text-zinc-700 my-6;
+}
+
+.webzine-prose :where(img) {
+  @apply rounded-xl border border-zinc-200 my-6 mx-auto shadow-sm;
+}
+
+.webzine-prose :where(hr) {
+  @apply my-10 border-zinc-200;
+}
+
+/* GFM Task Lists (Checkboxes) */
+.webzine-prose ul.contains-task-list {
+  @apply list-none pl-1;
+}
+
+.webzine-prose li.task-list-item {
+  @apply flex items-start gap-2.5 my-2 pl-0;
+}
+
+.webzine-prose li.task-list-item input[type='checkbox'] {
+  @apply mt-1.5 h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 shrink-0;
+}
+
+/* Responsive Data Tables (Modern Web Guidance) */
+.webzine-prose .table-wrapper {
+  overflow: auto;
+  max-inline-size: 100%;
+  container-type: inline-size;
+  @apply my-6 rounded-xl border border-zinc-200 bg-white shadow-sm;
+}
+
+.webzine-prose .table-wrapper table {
+  @apply my-0 w-full text-sm text-left;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.webzine-prose .table-wrapper thead {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  @apply bg-zinc-100 text-zinc-900 font-semibold border-b border-zinc-200;
+}
+
+.webzine-prose .table-wrapper th,
+.webzine-prose .table-wrapper td {
+  @apply px-4 py-3 border-b border-zinc-200/80 align-top;
+}
+
+.webzine-prose .table-wrapper tbody tr:last-child td,
+.webzine-prose .table-wrapper tbody tr:last-child th {
+  @apply border-b-0;
+}
+
+.webzine-prose .table-wrapper tbody tr:hover {
+  @apply bg-zinc-50/80;
+}
+
+/* GitHub-style Blockquote Alerts (remark-github-blockquote-alert) */
+.markdown-alert {
+  @apply my-6 rounded-xl border-l-4 px-5 py-4 text-sm leading-relaxed shadow-sm;
+}
+
+.markdown-alert-title {
+  @apply flex items-center gap-2 font-bold text-sm mb-2;
+}
+
+.markdown-alert-title svg {
+  @apply w-4 h-4 fill-current shrink-0;
+}
+
+.markdown-alert > :last-child {
+  @apply mb-0;
+}
+
+.markdown-alert-note {
+  @apply border-blue-600 bg-blue-50/70 text-zinc-800;
+}
+.markdown-alert-note .markdown-alert-title {
+  @apply text-blue-700;
+}
+
+.markdown-alert-tip {
+  @apply border-emerald-600 bg-emerald-50/70 text-zinc-800;
+}
+.markdown-alert-tip .markdown-alert-title {
+  @apply text-emerald-700;
+}
+
+.markdown-alert-important {
+  @apply border-violet-600 bg-violet-50/70 text-zinc-800;
+}
+.markdown-alert-important .markdown-alert-title {
+  @apply text-violet-700;
+}
+
+.markdown-alert-warning {
+  @apply border-amber-500 bg-amber-50/80 text-zinc-800;
+}
+.markdown-alert-warning .markdown-alert-title {
+  @apply text-amber-800;
+}
+
+.markdown-alert-caution {
+  @apply border-rose-600 bg-rose-50/70 text-zinc-800;
+}
+.markdown-alert-caution .markdown-alert-title {
+  @apply text-rose-700;
+}
+
+/* Mermaid Diagram Container */
+.mermaid-container {
+  @apply my-7 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm overflow-x-auto;
+}
+
+.mermaid-container pre.mermaid {
+  @apply m-0 bg-transparent p-0 text-zinc-800 flex justify-center font-sans text-sm leading-normal border-0;
+}
+
+/* Raw HTML Elements inside Markdown (details, summary, kbd, mark, iframe, video) */
+.webzine-prose details {
+  @apply my-5 rounded-xl border border-zinc-200 bg-white px-5 py-3.5 shadow-sm;
+}
+
+.webzine-prose details summary {
+  @apply cursor-pointer font-semibold text-zinc-900 select-none py-1;
+}
+
+.webzine-prose details[open] summary {
+  @apply mb-3 pb-2.5 border-b border-zinc-100;
+}
+
+.webzine-prose kbd {
+  @apply inline-block rounded-md border border-zinc-300 bg-zinc-100 px-1.5 py-0.5 font-mono text-xs font-semibold text-zinc-800 shadow-[0_1px_0_rgba(0,0,0,0.12)];
+}
+
+.webzine-prose mark {
+  @apply bg-amber-200/80 text-zinc-900 px-1 py-0.5 rounded;
+}
+
+.webzine-prose iframe,
+.webzine-prose video {
+  @apply w-full aspect-video rounded-xl border border-zinc-200 my-6 shadow-sm;
+}

@@ -1,0 +1,53 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import PostDetailLayout from '@/layouts/PostDetailLayout.astro';
+import {
+  getAdjacentPostsInCategory,
+  getAllPosts,
+  type ProcessedPost,
+} from '@/lib/posts';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const allPosts = await getAllPosts();
+
+  return Promise.all(
+    allPosts.map(async (post) => {
+      const { prevPost, nextPost } = await getAdjacentPostsInCategory(
+        post.categorySlug,
+        post.slug
+      );
+
+      return {
+        params: {
+          category: post.categorySlug,
+          slug: post.slug,
+        },
+        props: {
+          post,
+          prevPost,
+          nextPost,
+        },
+      };
+    })
+  );
+};
+
+interface Props {
+  post: ProcessedPost;
+  prevPost: ProcessedPost | null;
+  nextPost: ProcessedPost | null;
+}
+
+const { post, prevPost, nextPost } = Astro.props;
+const { Content, headings } = await render(post.entry);
+---
+
+<PostDetailLayout
+  post={post}
+  headings={headings}
+  prevPost={prevPost}
+  nextPost={nextPost}
+>
+  <Content />
+</PostDetailLayout>

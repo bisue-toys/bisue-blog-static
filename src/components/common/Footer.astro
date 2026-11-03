@@ -1,0 +1,64 @@
+---
+import { siteConfig } from '@/config/site';
+import { getCategoriesWithCount } from '@/lib/posts';
+import { withBase } from '@/lib/url';
+
+const categories = await getCategoriesWithCount();
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="mt-20 border-t border-zinc-200 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+      <div>
+        <a
+          href={withBase('/')}
+          class="inline-flex items-center gap-2 font-extrabold text-lg text-zinc-900 tracking-tight"
+        >
+          <span
+            class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-zinc-900 text-white text-xs font-extrabold"
+            aria-hidden="true"
+          >
+            B
+          </span>
+          <span>{siteConfig.title}</span>
+        </a>
+        <p class="mt-2 text-sm text-zinc-500 max-w-md">
+          {siteConfig.subtitle}
+        </p>
+      </div>
+
+      <nav aria-label="푸터 카테고리 링크" class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        <a
+          href={withBase('/')}
+          class="text-zinc-600 hover:text-blue-600 font-medium transition-colors"
+        >
+          홈
+        </a>
+        <a
+          href={withBase('/posts/')}
+          class="text-zinc-600 hover:text-blue-600 font-medium transition-colors"
+        >
+          전체 글
+        </a>
+        {
+          categories.map((cat) => (
+            <a
+              href={cat.url}
+              class="text-zinc-600 hover:text-blue-600 font-medium transition-colors"
+            >
+              {cat.label}
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+
+    <div
+      class="mt-8 pt-6 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400"
+    >
+      <p>© {currentYear} {siteConfig.title}. All rights reserved.</p>
+      <p>Built with Astro & Markdown · Hosted on GitHub Pages</p>
+    </div>
+  </div>
+</footer>

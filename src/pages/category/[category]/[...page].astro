@@ -1,0 +1,95 @@
+---
+import type { GetStaticPaths, Page } from 'astro';
+import Pagination from '@/components/common/Pagination.astro';
+import PostCard from '@/components/post/PostCard.astro';
+import { siteConfig } from '@/config/site';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import {
+  getCategoriesWithCount,
+  getPostsByCategory,
+  type ProcessedPost,
+  type ResolvedCategory,
+} from '@/lib/posts';
+
+export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
+  const categories = await getCategoriesWithCount();
+  const paths = [];
+
+  for (const category of categories) {
+    const categoryPosts = await getPostsByCategory(category.slug);
+    const paginated = paginate(categoryPosts, {
+      params: { category: category.slug },
+      props: { category },
+      pageSize: siteConfig.postsPerPage,
+    });
+    paths.push(...paginated);
+  }
+
+  return paths;
+};
+
+interface Props {
+  page: Page<ProcessedPost>;
+  category: ResolvedCategory;
+}
+
+const { page, category } = Astro.props;
+---
+
+<BaseLayout
+  title={`${category.label} 카테고리 목록`}
+  description={category.description}
+  activeCategory={category.slug}
+>
+  <section class="py-10 sm:py-12 border-b border-zinc-200">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-2 mb-2">
+          <span class="px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-xs font-bold uppercase">
+            Category
+          </span>
+          <span class="text-xs font-semibold text-zinc-400">
+            /{category.slug}
+          </span>
+        </div>
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-zinc-900 tracking-tight">
+          {category.label}
+        </h1>
+        {
+          category.description && (
+            <p class="mt-2 text-sm sm:text-base text-zinc-600 max-w-2xl">
+              {category.description}
+            </p>
+          )
+        }
+      </div>
+
+      <div class="text-sm font-semibold text-zinc-500 shrink-0">
+        총 <span class="text-blue-600 font-bold">{category.count}</span>개의 게시글
+        {
+          page.lastPage > 1 && (
+            <span class="text-zinc-400 ml-1">
+              ({page.currentPage} / {page.lastPage} 페이지)
+            </span>
+          )
+        }
+      </div>
+    </div>
+  </section>
+
+  <section aria-label={`${category.label} 게시글 목록`} class="py-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-7">
+      {
+        page.data.map((post, idx) => (
+          <PostCard post={post} eagerLoad={idx < 3} />
+        ))
+      }
+    </div>
+
+    <Pagination
+      currentPage={page.currentPage}
+      totalPages={page.lastPage}
+      baseUrl={`/category/${category.slug}`}
+    />
+  </section>
+</BaseLayout>

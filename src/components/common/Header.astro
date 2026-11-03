@@ -1,0 +1,509 @@
+---
+import { siteConfig } from '@/config/site';
+import { getAllPosts, getCategoriesWithCount } from '@/lib/posts';
+import { withBase } from '@/lib/url';
+
+interface Props {
+  activeCategory?: string;
+  currentPath?: string;
+}
+
+const { activeCategory, currentPath = Astro.url.pathname } = Astro.props;
+
+const categories = await getCategoriesWithCount();
+const allPosts = await getAllPosts();
+const totalPostCount = allPosts.length;
+
+const activeCategoryObj = categories.find((c) => c.slug === activeCategory);
+
+const homeUrl = withBase('/');
+const allPostsUrl = withBase('/posts/');
+
+const normPath = currentPath.replace(/\/$/, '') || '/';
+const isAllPostsActive =
+  !activeCategory &&
+  (normPath === allPostsUrl.replace(/\/$/, '') ||
+    normPath.startsWith(`${allPostsUrl.replace(/\/$/, '')}/`));
+const isHomeActive = !activeCategory && !isAllPostsActive && normPath === homeUrl.replace(/\/$/, '');
+---
+
+<header
+  id="site-header"
+  class="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-zinc-200"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16 gap-4">
+      <!-- 좌측 웹진 브랜드 로고 -->
+      <div class="flex items-center shrink-0">
+        <a
+          href={homeUrl}
+          class="group flex items-center gap-2.5 text-zinc-900 hover:text-blue-600 transition-colors"
+        >
+          <span
+            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-900 text-white font-extrabold text-sm tracking-tighter group-hover:bg-blue-600 transition-colors"
+            aria-hidden="true"
+          >
+            B
+          </span>
+          <span class="font-extrabold text-lg sm:text-xl tracking-tight">
+            {siteConfig.title}
+          </span>
+        </a>
+      </div>
+
+      <!-- 중앙 데스크톱 네비게이션: 홈 | 전체 글 | 카테고리 ▾ (메가 메뉴 트리거) -->
+      <nav aria-label="주요 메뉴" class="hidden md:flex items-center gap-1.5 py-1">
+        <a
+          href={homeUrl}
+          aria-current={isHomeActive ? 'page' : undefined}
+          class:list={[
+            'px-3.5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors',
+            isHomeActive
+              ? 'bg-zinc-900 text-white'
+              : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100',
+          ]}
+        >
+          홈
+        </a>
+
+        <a
+          href={allPostsUrl}
+          aria-current={isAllPostsActive ? 'page' : undefined}
+          class:list={[
+            'px-3.5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors inline-flex items-center gap-1.5',
+            isAllPostsActive
+              ? 'bg-blue-600 text-white'
+              : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100',
+          ]}
+        >
+          <span>전체 글</span>
+          <span
+            class:list={[
+              'text-xs px-1.5 py-0.5 rounded-full font-medium',
+              isAllPostsActive ? 'bg-blue-700 text-blue-100' : 'bg-zinc-100 text-zinc-500',
+            ]}
+          >
+            {totalPostCount}
+          </span>
+        </a>
+
+        <!-- 카테고리 통합 메가 메뉴 트리거 버튼 -->
+        <button
+          type="button"
+          id="mega-menu-trigger"
+          aria-expanded="false"
+          aria-controls="category-mega-menu"
+          class:list={[
+            'px-3.5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all inline-flex items-center gap-2 border',
+            activeCategoryObj
+              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+              : 'bg-white text-zinc-700 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50',
+          ]}
+        >
+          <span>
+            {activeCategoryObj ? `카테고리 · ${activeCategoryObj.label}` : '카테고리'}
+          </span>
+          <span
+            class:list={[
+              'text-xs px-1.5 py-0.5 rounded-full font-medium',
+              activeCategoryObj ? 'bg-blue-700 text-blue-100' : 'bg-zinc-100 text-zinc-600',
+            ]}
+          >
+            {categories.length}
+          </span>
+          <svg
+            id="mega-menu-chevron"
+            class="w-4 h-4 transition-transform duration-200"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+      </nav>
+
+      <!-- 우측 액션 영역: 검색 버튼 및 모바일 드로어 트리거 -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          type="button"
+          id="open-search-btn"
+          aria-label="게시글 검색 열기"
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 hover:border-zinc-300 text-zinc-600 text-sm transition-colors"
+        >
+          <svg
+            class="w-4 h-4 text-zinc-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <span class="hidden sm:inline font-medium">검색</span>
+          <kbd
+            class="hidden lg:inline-block text-[11px] font-mono text-zinc-400 bg-white px-1.5 py-0.5 rounded border border-zinc-200"
+          >
+            Ctrl K
+          </kbd>
+        </button>
+
+        <!-- 모바일 카테고리 메뉴 열기 버튼 -->
+        <button
+          type="button"
+          id="open-mobile-menu-btn"
+          aria-label="카테고리 메뉴 열기"
+          aria-haspopup="dialog"
+          aria-controls="mobile-nav-dialog"
+          class="md:hidden inline-flex items-center justify-center p-2 rounded-xl text-zinc-700 hover:bg-zinc-100 border border-zinc-200 transition-colors"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 데스크톱 카테고리 메가 메뉴 (다열 그리드: 카테고리명 + 설명 + 글 개수 + 빠른 필터) -->
+  <div
+    id="category-mega-menu"
+    hidden
+    role="region"
+    aria-label="전체 카테고리 메가 메뉴"
+    class="hidden absolute left-0 right-0 top-full bg-white border-b border-zinc-200 shadow-xl"
+  >
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <!-- 메가 메뉴 상단 헤더 및 실시간 카테고리 필터 -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-5 border-b border-zinc-100">
+        <div>
+          <h2 class="text-sm font-extrabold text-zinc-900 tracking-tight flex items-center gap-2">
+            <span>전체 카테고리 탐색</span>
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+              총 {categories.length}개 카테고리 · {totalPostCount}편의 글
+            </span>
+          </h2>
+          <p class="text-xs text-zinc-500 mt-0.5">
+            원하는 주제의 카테고리를 선택하면 해당 카테고리의 게시글 목록으로 이동합니다.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <input
+              type="search"
+              id="mega-menu-filter-input"
+              placeholder="카테고리 이름 검색..."
+              aria-label="카테고리 이름 필터"
+              class="w-52 px-3 py-1.5 text-xs rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
+            />
+          </div>
+          <a
+            href={allPostsUrl}
+            class="text-xs font-bold text-blue-600 hover:text-blue-700 whitespace-nowrap"
+          >
+            전체 글 보기 ({totalPostCount}) →
+          </a>
+        </div>
+      </div>
+
+      <!-- 다열 카테고리 그리드 (카테고리가 수십 개로 늘어나도 스크롤 및 3열 그리드로 깔끔히 수용) -->
+      <div
+        id="mega-menu-grid"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto pr-1"
+      >
+        {
+          categories.map((cat) => {
+            const isActive = activeCategory === cat.slug;
+            return (
+              <a
+                href={cat.url}
+                data-category-card
+                data-category-search={`${cat.label.toLowerCase()} ${cat.slug.toLowerCase()} ${(cat.description || '').toLowerCase()}`}
+                aria-current={isActive ? 'page' : undefined}
+                class:list={[
+                  'group flex flex-col justify-between p-4 rounded-xl border transition-all',
+                  isActive
+                    ? 'bg-blue-50/70 border-blue-500 ring-1 ring-blue-500'
+                    : 'bg-zinc-50/50 hover:bg-white border-zinc-200/80 hover:border-blue-400 hover:shadow-sm',
+                ]}
+              >
+                <div>
+                  <div class="flex items-center justify-between gap-2">
+                    <span
+                      class:list={[
+                        'font-bold text-sm transition-colors',
+                        isActive
+                          ? 'text-blue-700'
+                          : 'text-zinc-900 group-hover:text-blue-600',
+                      ]}
+                    >
+                      {cat.label}
+                    </span>
+                    <span
+                      class:list={[
+                        'text-xs px-2 py-0.5 rounded-full font-semibold shrink-0',
+                        isActive
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-zinc-200/70 text-zinc-700 group-hover:bg-blue-50 group-hover:text-blue-700',
+                      ]}
+                    >
+                      {cat.count}편
+                    </span>
+                  </div>
+                  {cat.description && (
+                    <p class="mt-1.5 text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+                      {cat.description}
+                    </p>
+                  )}
+                </div>
+
+                <div class="mt-3 pt-2 border-t border-zinc-200/50 flex items-center justify-between text-[11px] text-zinc-400">
+                  <span class="font-mono">/{cat.slug}</span>
+                  <span class="font-semibold text-zinc-500 group-hover:text-blue-600 transition-colors">
+                    목록 이동 →
+                  </span>
+                </div>
+              </a>
+            );
+          })
+        }
+      </div>
+
+      <p
+        id="mega-menu-empty"
+        hidden
+        class="hidden py-8 text-center text-sm text-zinc-400"
+      >
+        일치하는 카테고리가 없습니다.
+      </p>
+    </div>
+  </div>
+
+  <!-- 모바일 반응형 카테고리 드로어 (Native <dialog> with light-dismiss) -->
+  <dialog
+    id="mobile-nav-dialog"
+    aria-labelledby="mobile-nav-title"
+    {...({ closedby: 'any' } as any)}
+    class="m-0 ml-auto h-full max-h-full w-80 max-w-[85vw] bg-white p-6 shadow-2xl border-l border-zinc-200 open:flex open:flex-col"
+  >
+    <div class="flex items-center justify-between pb-4 border-b border-zinc-200">
+      <h2 id="mobile-nav-title" class="font-extrabold text-base text-zinc-900 tracking-tight">
+        카테고리 메뉴 ({categories.length})
+      </h2>
+      <form method="dialog">
+        <button
+          type="submit"
+          aria-label="메뉴 닫기"
+          class="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <nav aria-label="모바일 카테고리 목록" class="mt-4 flex-1 overflow-y-auto space-y-1.5">
+      <a
+        href={homeUrl}
+        class:list={[
+          'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
+          isHomeActive ? 'bg-zinc-900 text-white' : 'text-zinc-700 hover:bg-zinc-100',
+        ]}
+      >
+        <span>홈 (큐레이션 메인)</span>
+      </a>
+
+      <a
+        href={allPostsUrl}
+        class:list={[
+          'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
+          isAllPostsActive ? 'bg-blue-600 text-white' : 'text-zinc-700 hover:bg-zinc-100',
+        ]}
+      >
+        <span>전체 게시글 보기</span>
+        <span
+          class:list={[
+            'text-xs px-2 py-0.5 rounded-full font-medium',
+            isAllPostsActive ? 'bg-blue-700 text-white' : 'bg-zinc-100 text-zinc-600',
+          ]}
+        >
+          {totalPostCount}
+        </span>
+      </a>
+
+      <div class="pt-3 pb-1 px-3.5 text-xs font-bold uppercase tracking-wider text-zinc-400">
+        Categories ({categories.length})
+      </div>
+
+      {
+        categories.map((cat) => {
+          const isActive = activeCategory === cat.slug;
+          return (
+            <a
+              href={cat.url}
+              class:list={[
+                'flex flex-col px-3.5 py-2.5 rounded-xl text-sm transition-colors',
+                isActive ? 'bg-blue-600 text-white' : 'text-zinc-700 hover:bg-zinc-100',
+              ]}
+            >
+              <div class="flex items-center justify-between font-semibold">
+                <span>{cat.label}</span>
+                <span
+                  class:list={[
+                    'text-xs px-2 py-0.5 rounded-full font-medium',
+                    isActive ? 'bg-blue-700 text-white' : 'bg-zinc-100 text-zinc-600',
+                  ]}
+                >
+                  {cat.count}
+                </span>
+              </div>
+              {cat.description && (
+                <span
+                  class:list={[
+                    'text-xs mt-0.5 line-clamp-1',
+                    isActive ? 'text-blue-100' : 'text-zinc-400',
+                  ]}
+                >
+                  {cat.description}
+                </span>
+              )}
+            </a>
+          );
+        })
+      }
+    </nav>
+  </dialog>
+</header>
+
+<script>
+  // 1. 데스크톱 카테고리 메가 메뉴 열기/닫기 및 필터링 제어
+  const megaTrigger = document.getElementById('mega-menu-trigger');
+  const megaMenu = document.getElementById('category-mega-menu');
+  const megaChevron = document.getElementById('mega-menu-chevron');
+  const filterInput = document.getElementById('mega-menu-filter-input') as HTMLInputElement | null;
+  const categoryCards = document.querySelectorAll<HTMLElement>('[data-category-card]');
+  const emptyMsg = document.getElementById('mega-menu-empty');
+
+  function setMegaMenuOpen(isOpen: boolean) {
+    if (!megaTrigger || !megaMenu) return;
+    megaTrigger.setAttribute('aria-expanded', String(isOpen));
+    if (isOpen) {
+      megaMenu.removeAttribute('hidden');
+      megaMenu.classList.remove('hidden');
+      megaChevron?.classList.add('rotate-180');
+    } else {
+      megaMenu.setAttribute('hidden', '');
+      megaMenu.classList.add('hidden');
+      megaChevron?.classList.remove('rotate-180');
+    }
+  }
+
+  if (megaTrigger && megaMenu) {
+    megaTrigger.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const isExpanded = megaTrigger.getAttribute('aria-expanded') === 'true';
+      setMegaMenuOpen(!isExpanded);
+    });
+
+    // 메가 메뉴 바깥 영역 클릭 시 자동 닫기 (Light-dismiss)
+    document.addEventListener('click', (event) => {
+      const target = event.target as Node | null;
+      if (
+        megaTrigger.getAttribute('aria-expanded') === 'true' &&
+        target &&
+        !megaMenu.contains(target) &&
+        !megaTrigger.contains(target)
+      ) {
+        setMegaMenuOpen(false);
+      }
+    });
+
+    // ESC 키 입력 시 닫기
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && megaTrigger.getAttribute('aria-expanded') === 'true') {
+        setMegaMenuOpen(false);
+        megaTrigger.focus();
+      }
+    });
+  }
+
+  // 카테고리 실시간 검색 필터 (카테고리가 많아졌을 때 즉시 필터링)
+  if (filterInput && categoryCards.length > 0) {
+    filterInput.addEventListener('input', () => {
+      const query = filterInput.value.trim().toLowerCase();
+      let visibleCount = 0;
+
+      categoryCards.forEach((card) => {
+        const searchTarget = card.getAttribute('data-category-search') || '';
+        const matched = !query || searchTarget.includes(query);
+        card.style.display = matched ? '' : 'none';
+        if (matched) visibleCount++;
+      });
+
+      if (emptyMsg) {
+        if (visibleCount === 0) {
+          emptyMsg.removeAttribute('hidden');
+          emptyMsg.classList.remove('hidden');
+        } else {
+          emptyMsg.setAttribute('hidden', '');
+          emptyMsg.classList.add('hidden');
+        }
+      }
+    });
+  }
+
+  // 2. 모바일 드로어 제어
+  const mobileBtn = document.getElementById('open-mobile-menu-btn');
+  const mobileDialog = document.getElementById('mobile-nav-dialog') as HTMLDialogElement | null;
+
+  if (mobileBtn && mobileDialog) {
+    mobileBtn.addEventListener('click', () => {
+      mobileDialog.showModal();
+    });
+
+    if (!('closedBy' in HTMLDialogElement.prototype)) {
+      mobileDialog.addEventListener('click', (event) => {
+        if (event.target !== mobileDialog) return;
+        const rect = mobileDialog.getBoundingClientRect();
+        const isDialogContent =
+          rect.top <= event.clientY &&
+          event.clientY <= rect.top + rect.height &&
+          rect.left <= event.clientX &&
+          event.clientX <= rect.left + rect.width;
+        if (isDialogContent) return;
+        mobileDialog.close();
+      });
+    }
+  }
+</script>
