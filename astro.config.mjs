@@ -6,7 +6,7 @@ import { remarkAlert } from 'remark-github-blockquote-alert';
 import rehypeRaw from 'rehype-raw';
 import { visit } from 'unist-util-visit';
 
-const siteUrl = process.env.SITE_URL || 'https://bisue.github.io';
+const siteUrl = process.env.SITE_URL || 'https://bisue-toys.github.io';
 const basePath = process.env.SITE_BASE || '/bisue-blog-static';
 
 /**

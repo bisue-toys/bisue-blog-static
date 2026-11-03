@@ -28,7 +28,7 @@ export const siteConfig: SiteConfig = {
   subtitle: '생각과 기술, 문화를 큐레이션하는 디지털 웹진',
   description: '마크다운 기반의 모던 에디토리얼 정적 웹진 블로그입니다.',
   author: 'Bisue',
-  siteUrl: process.env.SITE_URL || 'https://bisue.github.io',
+  siteUrl: process.env.SITE_URL || 'https://bisue-toys.github.io',
   basePath: process.env.SITE_BASE || '/bisue-blog-static',
   locale: 'ko-KR',
   homePostsPerCategory: 3,
